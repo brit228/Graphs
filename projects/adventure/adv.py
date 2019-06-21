@@ -24,6 +24,18 @@ player = Player("Name", world.startingRoom)
 # Fill this out
 traversalPath = []
 traversalGraph = {}
+coordinateDict = {}
+
+coordinateCommands = {
+    'n': (0, 1),
+    's': (0, -1),
+    'e': (1, 0),
+    'w': (-1, 0)
+}
+
+x = 0
+y = 0
+
 def oppositeDirection(d):
     if d == 'n':
         return 's'
@@ -38,6 +50,8 @@ travelCommands = ['n', 's', 'e', 'w']
 pathFromStart = []
 idFromStart = [player.currentRoom.id]
 
+coordinateDict[(x, y)] = player.currentRoom.id
+
 traversalGraph[player.currentRoom.id] = {}
 for c in player.currentRoom.getExits():
     traversalGraph[player.currentRoom.id][c] = '?'
@@ -47,13 +61,21 @@ while True:
     for c in travelCommands:
         if c in traversalGraph[player.currentRoom.id]:
             if traversalGraph[player.currentRoom.id][c] == '?':
-                player.travel(c)
-                traversalPath.append(c)
-                pathFromStart.append(c)
-                idFromStart.append(player.currentRoom.id)
-                traversalGraph[idFromStart[-2]][pathFromStart[-1]] = idFromStart[-1]
-                travel = True
-                break
+                x += coordinateCommands[c][0]
+                y += coordinateCommands[c][1]
+                if (x, y) in coordinateDict:
+                    traversalGraph[player.currentRoom.id][c] = coordinateDict[(x, y)]
+                    x -= coordinateCommands[c][0]
+                    y -= coordinateCommands[c][1]
+                else:
+                    coordinateDict[(x, y)] = player.currentRoom.id
+                    player.travel(c)
+                    traversalPath.append(c)
+                    pathFromStart.append(c)
+                    idFromStart.append(player.currentRoom.id)
+                    traversalGraph[idFromStart[-2]][pathFromStart[-1]] = idFromStart[-1]
+                    travel = True
+                    break
     if travel:
         if player.currentRoom.id not in traversalGraph:
             traversalGraph[player.currentRoom.id] = {}
@@ -63,6 +85,8 @@ while True:
     else:
         if len(pathFromStart) == 0:
             break
+        x += coordinateCommands[oppositeDirection(pathFromStart[-1])][0]
+        y += coordinateCommands[oppositeDirection(pathFromStart[-1])][1]
         player.travel(oppositeDirection(pathFromStart[-1]))
         traversalPath.append(oppositeDirection(pathFromStart[-1]))
         pathFromStart.pop(-1)
