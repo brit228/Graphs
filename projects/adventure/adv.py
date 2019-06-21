@@ -92,7 +92,102 @@ while True:
         pathFromStart.pop(-1)
         idFromStart.pop(-1)
 
+queue = []
+dist = {}
 
+queue.append(idFromStart[0])
+dist[idFromStart[0]] = [[idFromStart[0]]]
+
+while queue:
+    s = queue.pop(0)
+    for c in traversalGraph[s]:
+        if traversalGraph[s][c] not in dist:
+            queue.append(traversalGraph[s][c])
+            dist[traversalGraph[s][c]] = []
+            for i in range(len(dist[s])):
+                dist[traversalGraph[s][c]].append(dist[s][i]+[traversalGraph[s][c]])
+        else:
+            for i in range(len(dist[s])):
+                dist[traversalGraph[s][c]].append(dist[s][i]+[traversalGraph[s][c]])
+for c in dist:
+    drop = []
+    for i in range(len(dist[c])):
+        while len(dist[c][i]) > 0:
+            if dist[c][i][0] != c:
+                dist[c][i].pop(0)
+            else:
+                break
+        if len(dist[c][i]) <= 1:
+            drop.append(i)
+        elif dist[c][i][0] == dist[c][i][-1] and len(dist[c][i]) == 3:
+            drop.append(i)
+    dist[c] = [dist[c][i] for i in range(len(dist[c])) if i not in drop]
+n_dist = {}
+for c in dist:
+    if len(dist[c]) > 0:
+        n_dist[c] = dist[c]
+traversalPath = None
+k = [0 for i in n_dist for c in range(len(n_dist[i]))]
+k = list(range(len(k)))
+for d in range(2**len(k)):
+    ind = 0
+    n_dist_c = {}
+    for c in n_dist:
+        n_dist_c[c] = []
+        for l in n_dist[c]:
+            if d & 2**ind // 2**ind == 1:
+                n_dist_c[c].append(reversed(l))
+            else:
+                n_dist_c[c].append(l)
+            ind += 1
+    traversalPathN = []
+    pathFromStart = []
+    visited = set()
+    cRoom = 0
+    visited.add(cRoom)
+    while True:
+        travel = False
+        for c in travelCommands:
+            if c in traversalGraph[cRoom]:
+                if traversalGraph[cRoom][c] not in visited:
+                    if cRoom in n_dist:
+                        if traversalGraph[cRoom][c] not in [i[x+1] for i in n_dist[cRoom] for x in range(len(i)-1) if i[x] == cRoom]:
+                            traversalPathN.append(c)
+                            pathFromStart.append(c)
+                            cRoom = traversalGraph[cRoom][c]
+                            visited.add(cRoom)
+                            travel = True
+                            break
+                    else:
+                        traversalPathN.append(c)
+                        pathFromStart.append(c)
+                        cRoom = traversalGraph[cRoom][c]
+                        visited.add(cRoom)
+                        travel = True
+                        break
+        if not travel:
+            for c in travelCommands:
+                if c in traversalGraph[cRoom]:
+                    if traversalGraph[cRoom][c] not in visited:
+                        if cRoom in n_dist:
+                            if traversalGraph[cRoom][c] in [i[x+1] for i in n_dist[cRoom] for x in range(len(i)-1) if i[x] == cRoom]:
+                                traversalPathN.append(c)
+                                pathFromStart.append(c)
+                                cRoom = traversalGraph[cRoom][c]
+                                visited.add(cRoom)
+                                travel = True
+                                break
+            if not travel:
+                if len(pathFromStart) == 0:
+                    break
+                traversalPathN.append(oppositeDirection(pathFromStart[-1]))
+                cRoom = traversalGraph[cRoom][oppositeDirection(pathFromStart[-1])]
+                pathFromStart.pop(-1)
+    if traversalPath:
+        if len(traversalPath) > len(traversalPathN):
+            traversalPath = traversalPathN[:]
+    else:
+        traversalPath = traversalPathN[:]
 
 # TRAVERSAL TEST
 visited_rooms = set()
