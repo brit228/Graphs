@@ -23,6 +23,50 @@ player = Player("Name", world.startingRoom)
 
 # Fill this out
 traversalPath = []
+traversalGraph = {}
+def oppositeDirection(d):
+    if d == 'n':
+        return 's'
+    elif d == 'e':
+        return 'w'
+    elif d == 's':
+        return 'n'
+    else:
+        return 'e'
+travelCommands = ['n', 's', 'e', 'w']
+
+pathFromStart = []
+idFromStart = [player.currentRoom.id]
+
+traversalGraph[player.currentRoom.id] = {}
+for c in player.currentRoom.getExits():
+    traversalGraph[player.currentRoom.id][c] = '?'
+
+while True:
+    travel = False
+    for c in travelCommands:
+        if c in traversalGraph[player.currentRoom.id]:
+            if traversalGraph[player.currentRoom.id][c] == '?':
+                player.travel(c)
+                traversalPath.append(c)
+                pathFromStart.append(c)
+                idFromStart.append(player.currentRoom.id)
+                traversalGraph[idFromStart[-2]][pathFromStart[-1]] = idFromStart[-1]
+                travel = True
+                break
+    if travel:
+        if player.currentRoom.id not in traversalGraph:
+            traversalGraph[player.currentRoom.id] = {}
+            for c in player.currentRoom.getExits():
+                traversalGraph[player.currentRoom.id][c] = '?'
+            traversalGraph[player.currentRoom.id][oppositeDirection(pathFromStart[-1])] = idFromStart[-2]
+    else:
+        if len(pathFromStart) == 0:
+            break
+        player.travel(oppositeDirection(pathFromStart[-1]))
+        traversalPath.append(oppositeDirection(pathFromStart[-1]))
+        pathFromStart.pop(-1)
+        idFromStart.pop(-1)
 
 
 
